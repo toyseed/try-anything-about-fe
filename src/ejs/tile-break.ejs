@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Tile Break</title>
+    <link rel="stylesheet" href="css/tile-break/tile-break-style.css"/>
+    <meta name="viewport" content="width=device-width, user-scalable=no"/>
+</head>
+<body>
+<h2 class="title">Tile Break</h2>
+<div class="wrap">
+    <div class="score">
+        <sapn class="score-label">Score:&nbsp;</sapn><span class="score-current">0</span>
+    </div>
+    <!--      create 9 * 9 tiles-->
+    <%
+    let tileRow = 9;
+    let tileCol = 9;
+    let blockRow = 3;
+    let blockCol = 3;
+    let showingBlockCount = 3;
+    %>
+    <div class="board">
+        <%
+        for (let r = 0; r < tileRow; r++) {
+        for (let c = 0; c < tileCol; c++) {
+        %>
+            <div style="position:relative" class="board-tile <%= (c < (tileCol - 2) && r < (tileRow - 2)) ? 'js_board-tile': ''%> <%= (c % blockCol) === blockCol - 1 && (c % tileCol) !== tileCol - 1 ? 'border-right' : '' %> <%= (r % blockRow) === blockRow - 1 && (r % tileRow) !== tileRow - 1 ? 'border-bottom' : '' %>" data-col="<%= c %>" data-row="<%= r %>" data-index="<%= r * tileRow + c %>">
+<!--                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);pointer-events: none"><%= r * tileRow + c %></div>-->
+            </div>
+        <% }} %>
+    </div>
+    <div class="blocks"
+        <%
+        for (let i = 0; i < showingBlockCount; i++) {
+        %>
+        ><div class="block" data-block-index="<%= i %>">
+            <%
+            for(let r = 0; r < blockRow; r++) {
+            for(let c = 0; c < blockCol; c++) {
+            %>
+                <div class="block-tile" data-col="<%= c %>" data-row="<%= r %>">
+                </div>
+            <%
+            }
+            }
+            %>
+        </div
+        <%
+        }
+        %>
+    ></div>
+    <div class="replay">
+        <button class="replay-button">replay</button>
+    </div>
+    <div class="gameover">
+        <div class="gameover-title">Game Over</div>
+        <div class="gameover-info">
+            <span>you score is: </span><span class="last-score"></span>
+        </div>
+        <div>
+            <button class="gameover-close">Close</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="js/tile-break.js"></script>
+</body>
+</html>
