@@ -26,7 +26,7 @@
         for (let c = 0; c < tileCol; c++) {
         %>
             <div style="position:relative" class="board-tile <%= (c < (tileCol - 2) && r < (tileRow - 2)) ? 'js_board-tile': ''%> <%= (c % blockCol) === blockCol - 1 && (c % tileCol) !== tileCol - 1 ? 'border-right' : '' %> <%= (r % blockRow) === blockRow - 1 && (r % tileRow) !== tileRow - 1 ? 'border-bottom' : '' %>" data-col="<%= c %>" data-row="<%= r %>" data-index="<%= r * tileRow + c %>">
-<!--                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);pointer-events: none"><%= r * tileRow + c %></div>-->
+                <div class="tile-inner"></div>
             </div>
         <% }} %>
     </div>
@@ -40,6 +40,7 @@
             for(let c = 0; c < blockCol; c++) {
             %>
                 <div class="block-tile" data-col="<%= c %>" data-row="<%= r %>">
+                    <div class="tile-inner"></div>
                 </div>
             <%
             }

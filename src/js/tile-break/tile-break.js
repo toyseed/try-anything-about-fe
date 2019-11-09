@@ -1,7 +1,7 @@
 "use strict";
 
 import $ from "jquery";
-import { fromEvent, Observable, of, range, zip, merge } from 'rxjs';
+import { fromEvent, Observable, of, range, zip, merge } from "rxjs";
 import {
   defaultIfEmpty,
   filter,
@@ -11,13 +11,14 @@ import {
   mergeMap,
   switchMap,
   takeUntil,
-  tap
+  tap,
+  throttleTime
 } from "rxjs/operators";
-import { fromArray } from 'rxjs/internal/observable/fromArray';
-import { shapes as ALL_SHAPES } from './blocks';
-import Score from './score';
-import Block from './transformable-block';
-import util from './block-transform-util';
+import { fromArray } from "rxjs/internal/observable/fromArray";
+import { shapes as ALL_SHAPES } from "./blocks";
+import Score from "./score";
+import Block from "./transformable-block";
+import util from "./block-transform-util";
 
 /*
   1. block 에 색상 추가
@@ -28,9 +29,8 @@ import util from './block-transform-util';
   4. / block design
   5. / support touch event
   6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
-  7. block 회전 기능 추가
+  7. / block 회전 기능 추가
     - 회전을 위한 버튼
-
  */
 $(window).ready(() => {
   const boardRow = 9;
@@ -38,9 +38,10 @@ $(window).ready(() => {
   const blockRow = 3;
   const blockCol = 3;
 
-  const shapes = ALL_SHAPES;
-  console.log(shapes);
   const blockEls = $(".block");
+  const shapes = ALL_SHAPES;
+  const colors = [1, 2, 3, 4];
+  const colors$ = fromArray(colors).pipe(map(color => "c" + color));
   let blocks = [];
   let board;
 
@@ -65,17 +66,20 @@ $(window).ready(() => {
     };
   })(score);
 
-  fromEvent($('.replay-button'), 'click').subscribe(() => initGame());
-  fromEvent($('.rotate-btn'), 'click').pipe(map(event => {
-    const $button = $(event.target);
-    const blockIndex = $button.data('index');
+  fromEvent($(".replay-button"), "click").subscribe(() => initGame());
+  fromEvent($(".rotate-btn"), "click")
+    .pipe(
+      map(event => {
+        const $button = $(event.target);
+        const blockIndex = $button.data("index");
 
-    return blockIndex;
-  })).subscribe(blockIndex => {
-    const block = blocks[blockIndex];
-    block.rotate();
-    fillBlockTo($(`.block[data-block-index=${blockIndex}]`), block);
-  })
+        return blockIndex;
+      })
+    )
+    .subscribe(blockIndex => {
+      const block = blocks[blockIndex];
+      fillBlockTo($(`.block[data-block-index=${blockIndex}]`), block.rotate());
+    });
   initGame();
 
   function initGame() {
@@ -87,8 +91,8 @@ $(window).ready(() => {
   }
 
   function initBoard() {
-    $('.board-tile.fill').each(function() {
-      $(this).removeClass('fill');
+    $(".board-tile.fill").each(function() {
+      $(this).removeClass("fill");
     });
   }
 
@@ -111,8 +115,8 @@ $(window).ready(() => {
     const touchStart$ = fromEvent($block, "touchstart").pipe(
       map(event => {
         const $target = $(event.target);
-        event.offsetX = $target.width() / 3 * 2;
-        event.offsetY = $target.height() / 3 * 2;
+        event.offsetX = ($target.width() / 3) * 2;
+        event.offsetY = ($target.height() / 4) * 6;
         return event;
       })
     );
@@ -124,6 +128,10 @@ $(window).ready(() => {
     const start$ = merge(mouseStart$, touchStart$);
     const end$ = merge(mouseEnd$, touchEnd$);
     const move$ = merge(mouseMove$, touchMove$);
+
+    // const start$ = mouseStart$;
+    // const end$ = mouseEnd$;
+    // const move$ = mouseMove$;
 
     const $blocks = $(".blocks");
     let blockY;
@@ -150,11 +158,16 @@ $(window).ready(() => {
         }),
         mergeMap(startEvent => {
           return move$.pipe(
+            // throttleTime(10),
             takeUntil(end$),
             tap(moveEvent => {
+              // https://stackoverflow.com/questions/11334452/event-offsetx-in-firefox
+              let startOffsetX = startEvent.offsetX;
+              let startOffsetY = startEvent.offsetY;
+
               $movingBlock.css({
-                top: moveEvent.clientY - blockY - startEvent.offsetY + 1,
-                left: moveEvent.clientX - blockX - startEvent.offsetX + 1
+                top: moveEvent.clientY - blockY - startOffsetY + 1,
+                left: moveEvent.clientX - blockX - startOffsetX + 1
               });
             }),
             last(),
@@ -180,22 +193,22 @@ $(window).ready(() => {
           const block = blocks[blockIndex];
           const baseRow = $checkBase.data("row");
           const baseCol = $checkBase.data("col");
-          const fillIndex = detectCollision(baseRow, baseCol, block.getShape());
-          if (fillIndex.length === 0) {
+          const tiles = findFillableTiles(baseRow, baseCol, block.getShape());
+          if (tiles.length === 0) {
             return;
           }
 
-          fillBoard(fillIndex);
-          score.update(fillIndex.length);
+          fillBoard(tiles);
+          score.update(tiles.length);
 
           // change current block
           const selectedBlock = selectRandomBlock(block.getType(), ...blocks);
           fillBlockTo($movingBlock, selectedBlock);
           blocks[blockIndex] = selectedBlock;
 
-          const rowComplete = checkRowComplete(fillIndex);
-          const colComplete = checkColComplete(fillIndex);
-          const areaComplete = checkAreaComplete(fillIndex);
+          const rowComplete = checkRowComplete(tiles);
+          const colComplete = checkColComplete(tiles);
+          const areaComplete = checkAreaComplete(tiles);
 
           setTimeout(function() {
             // remove
@@ -293,12 +306,12 @@ $(window).ready(() => {
 
               const fillables = [];
 
-              fillables.push(...detectCollision(row, col, block.getShape()));
+              fillables.push(...findFillableTiles(row, col, block.getShape()));
               let shape = block.getShape();
 
               for (let i = 0; i < 3; i++) {
                 shape = util.rotate(shape);
-                fillables.push(...detectCollision(row, col, shape));
+                fillables.push(...findFillableTiles(row, col, shape));
               }
 
               return fillables.length !== 0;
@@ -322,11 +335,11 @@ $(window).ready(() => {
     return result;
   }
 
-  function checkRowComplete(fillIndex) {
+  function checkRowComplete(tiles) {
     const result = [];
     const processed = [];
-    for (let index of fillIndex) {
-      let row = Math.floor(index / boardCol);
+    for (let tile of tiles) {
+      let row = Math.floor(tile.index / boardCol);
       if (processed.indexOf(row) > -1) {
         continue;
       } else {
@@ -351,12 +364,12 @@ $(window).ready(() => {
     return result;
   }
 
-  function checkColComplete(fillIndex) {
+  function checkColComplete(tiles) {
     const result = [];
     const processed = [];
 
-    for (let index of fillIndex) {
-      let col = Math.floor(index % boardCol);
+    for (let tile of tiles) {
+      let col = Math.floor(tile.index % boardCol);
       if (processed.indexOf(col) > -1) {
         continue;
       } else {
@@ -381,7 +394,7 @@ $(window).ready(() => {
     return result;
   }
 
-  function checkAreaComplete(fillIndex) {
+  function checkAreaComplete(tiles) {
     const result = [];
     const processed = [];
 
@@ -393,9 +406,10 @@ $(window).ready(() => {
       );
     };
 
-    fromArray(fillIndex)
+    fromArray(tiles)
       .pipe(
-        map(index => {
+        map(tile => {
+          const index = tile.index;
           const row = Math.floor(index / boardCol);
           const col = Math.floor(index % boardCol);
           return [row, col];
@@ -430,10 +444,15 @@ $(window).ready(() => {
     return result;
   }
 
-  function fillBoard(fillIndex) {
-    for (let index of fillIndex) {
-      board[index] = 1;
-      $(`.board-tile[data-index="${index}"]`).addClass("fill");
+  console.log(colors$);
+  function fillBoard(tiles) {
+    for (let tile of tiles) {
+      let index = tile.index;
+      board[index] = tile.color;
+      let $tile = $(`.board-tile[data-index="${index}"]`);
+      colors$.subscribe(colorClass => $tile.removeClass(colorClass));
+      $tile.addClass("fill");
+      $tile.addClass(`c${tile.color}`);
     }
   }
 
@@ -443,7 +462,7 @@ $(window).ready(() => {
     $block.get(0).style.left = null;
   }
 
-  function detectCollision(baseRow, baseCol, shape) {
+  function findFillableTiles(baseRow, baseCol, shape) {
     const fillIndexes = [];
     let boardIndex = baseRow * boardRow + baseCol;
     for (let i = 0; i < shape.length; i++) {
@@ -458,10 +477,10 @@ $(window).ready(() => {
       let blockTile = shape[i];
       let boardTile = board[boardIndex];
 
-      if (blockTile === 1 && boardTile === 1) {
+      if (blockTile > 0 && boardTile > 0) {
         return [];
-      } else if (blockTile === 1) {
-        fillIndexes.push(boardIndex);
+      } else if (blockTile > 0) {
+        fillIndexes.push({ index: boardIndex, color: blockTile });
       }
 
       boardIndex++;
@@ -488,7 +507,8 @@ $(window).ready(() => {
       return selectRandomBlock(current, ...except);
     }
 
-    return new Block(selected, shapes[selected]);
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    return new Block(selected, shapes[selected], color);
   }
 
   function fillBlockTo($el, block) {
@@ -498,9 +518,10 @@ $(window).ready(() => {
     for (let i = 0; i < shape.length; i++) {
       let $tile = $(tiles.get(i));
       let tileValue = shape[i];
-
-      if (tileValue === 1) {
+      if (tileValue > 0) {
+        colors$.subscribe(colorClass => $tile.removeClass(colorClass));
         $tile.addClass("fill");
+        $tile.addClass(`c${tileValue}`);
       } else {
         $tile.removeClass("fill");
       }

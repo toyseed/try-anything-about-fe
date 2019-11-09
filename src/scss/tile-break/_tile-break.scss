@@ -9,10 +9,11 @@ $colCount: 9;
   max-width: 600px;
   margin: 0 auto;
   position: relative;
+  touch-action: manipulation;
 
   .score {
     width: 70vmax;
-    max-width: 90%;
+    max-width: 82%;
     margin: 10px auto 5px;
   }
 
@@ -22,7 +23,7 @@ $colCount: 9;
     flex-wrap: wrap;
     box-sizing: initial;
     width: 70vmax;
-    max-width: 90%;
+    max-width: 82%;
     margin: 0 auto 30px;
     border: 1px solid #333;
     background-color: #fff;
@@ -32,7 +33,10 @@ $colCount: 9;
       padding-top: 100% / $rowCount;
       background-color: #fff;
       border: 0.5px solid #ccc;
-      transition: background-color 500ms, box-shadow 500ms;
+
+      .tile-inner {
+        transition: background-color 500ms, box-shadow 500ms;
+      }
 
       &.border-right {
         border-right: 1px solid #333;
@@ -42,19 +46,23 @@ $colCount: 9;
         border-bottom: 1px solid #333;
       }
     }
-
-    .fill {
-      background-color: rgb(0, 158, 255);
-      box-shadow: inset -4px -4px 3px rgba(100, 100, 100, 0.4);
-      transition: background-color 0ms, box-shadow 0ms;
-    }
   }
 
   .blocks {
     width: 70vmax;
-    max-width: 90%;
+    max-width: 82%;
 
     margin: 0 auto;
+  }
+
+  .tile-inner {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 6%;
   }
 
   .block {
@@ -67,6 +75,7 @@ $colCount: 9;
     transform: scale(0.9);
 
     .block-tile {
+      position: relative;
       width: calc(100% / 3);
       padding-top: calc(100% / 3);
       pointer-events: none;
@@ -84,26 +93,42 @@ $colCount: 9;
     }
   }
 
-  .block .fill {
-    background-color: rgb(0, 158, 255);
-    transform: scale(1);
+  .fill .tile-inner {
     box-shadow: inset -4px -4px 3px rgba(100, 100, 100, 0.4);
+  }
+  .fill.c1 .tile-inner {
+    background-color: #7f58af;
+    transition: background-color 0s, box-shadow 0s;
+  }
+  .fill.c2 .tile-inner {
+    background-color: #64c5eb;
+    transition: background-color 0s, box-shadow 0s;
+  }
+  .fill.c3 .tile-inner {
+    background-color: #e84d8a;
+    transition: background-color 0s, box-shadow 0s;
+  }
+  .fill.c4 .tile-inner {
+    background-color: #feb326;
+    transition: background-color 0s, box-shadow 0s;
   }
 
   .rotate-btns {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-around;
     width: 70vmax;
-    max-width: 90%;
+    max-width: 82%;
 
     margin: 0 auto;
 
     .rotate-btn {
-      flex-grow: 1;
-      height: 2rem;
+      flex: 0 0 auto;
       border: none;
       background-color: transparent;
+        padding: 3px 20px;
+        border: 1px solid lightgray;
+        border-radius: 4px;
 
       font-size: 1rem;
 

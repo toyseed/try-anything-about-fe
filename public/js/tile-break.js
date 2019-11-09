@@ -21017,18 +21017,20 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   4. / block design
   5. / support touch event
   6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
-  7. block 회전 기능 추가
+  7. / block 회전 기능 추가
     - 회전을 위한 버튼
-
  */
 (0, _jquery["default"])(window).ready(function () {
   var boardRow = 9;
   var boardCol = 9;
   var blockRow = 3;
   var blockCol = 3;
-  var shapes = _blocks.shapes;
-  console.log(shapes);
   var blockEls = (0, _jquery["default"])(".block");
+  var shapes = _blocks.shapes;
+  var colors = [1, 2, 3, 4];
+  var colors$ = (0, _fromArray.fromArray)(colors).pipe((0, _operators.map)(function (color) {
+    return "c" + color;
+  }));
   var blocks = [];
   var board;
   var score = new _score["default"](".score-current");
@@ -21053,17 +21055,16 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
   }(score);
 
-  (0, _rxjs.fromEvent)((0, _jquery["default"])('.replay-button'), 'click').subscribe(function () {
+  (0, _rxjs.fromEvent)((0, _jquery["default"])(".replay-button"), "click").subscribe(function () {
     return initGame();
   });
-  (0, _rxjs.fromEvent)((0, _jquery["default"])('.rotate-btn'), 'click').pipe((0, _operators.map)(function (event) {
+  (0, _rxjs.fromEvent)((0, _jquery["default"])(".rotate-btn"), "click").pipe((0, _operators.map)(function (event) {
     var $button = (0, _jquery["default"])(event.target);
-    var blockIndex = $button.data('index');
+    var blockIndex = $button.data("index");
     return blockIndex;
   })).subscribe(function (blockIndex) {
     var block = blocks[blockIndex];
-    block.rotate();
-    fillBlockTo((0, _jquery["default"])(".block[data-block-index=".concat(blockIndex, "]")), block);
+    fillBlockTo((0, _jquery["default"])(".block[data-block-index=".concat(blockIndex, "]")), block.rotate());
   });
   initGame();
 
@@ -21078,8 +21079,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   }
 
   function initBoard() {
-    (0, _jquery["default"])('.board-tile.fill').each(function () {
-      (0, _jquery["default"])(this).removeClass('fill');
+    (0, _jquery["default"])(".board-tile.fill").each(function () {
+      (0, _jquery["default"])(this).removeClass("fill");
     });
   }
 
@@ -21101,7 +21102,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var touchStart$ = (0, _rxjs.fromEvent)($block, "touchstart").pipe((0, _operators.map)(function (event) {
       var $target = (0, _jquery["default"])(event.target);
       event.offsetX = $target.width() / 3 * 2;
-      event.offsetY = $target.height() / 3 * 2;
+      event.offsetY = $target.height() / 4 * 6;
       return event;
     }));
     var touchEnd$ = (0, _rxjs.fromEvent)(document, "touchend");
@@ -21110,7 +21111,10 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }));
     var start$ = (0, _rxjs.merge)(mouseStart$, touchStart$);
     var end$ = (0, _rxjs.merge)(mouseEnd$, touchEnd$);
-    var move$ = (0, _rxjs.merge)(mouseMove$, touchMove$);
+    var move$ = (0, _rxjs.merge)(mouseMove$, touchMove$); // const start$ = mouseStart$;
+    // const end$ = mouseEnd$;
+    // const move$ = mouseMove$;
+
     var $blocks = (0, _jquery["default"])(".blocks");
     var blockY;
     var blockX;
@@ -21129,10 +21133,14 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       blockX = blockOffset.left - window.scrollX;
       pointAdjustment = $movingBlock.width() / (blockCol * 2);
     }), (0, _operators.mergeMap)(function (startEvent) {
-      return move$.pipe((0, _operators.takeUntil)(end$), (0, _operators.tap)(function (moveEvent) {
+      return move$.pipe( // throttleTime(10),
+      (0, _operators.takeUntil)(end$), (0, _operators.tap)(function (moveEvent) {
+        // https://stackoverflow.com/questions/11334452/event-offsetx-in-firefox
+        var startOffsetX = startEvent.offsetX;
+        var startOffsetY = startEvent.offsetY;
         $movingBlock.css({
-          top: moveEvent.clientY - blockY - startEvent.offsetY + 1,
-          left: moveEvent.clientX - blockX - startEvent.offsetX + 1
+          top: moveEvent.clientY - blockY - startOffsetY + 1,
+          left: moveEvent.clientX - blockX - startOffsetX + 1
         });
       }), (0, _operators.last)(), (0, _operators.map)(function (moveEvent) {
         return {
@@ -21155,21 +21163,21 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       var block = blocks[blockIndex];
       var baseRow = $checkBase.data("row");
       var baseCol = $checkBase.data("col");
-      var fillIndex = detectCollision(baseRow, baseCol, block.getShape());
+      var tiles = findFillableTiles(baseRow, baseCol, block.getShape());
 
-      if (fillIndex.length === 0) {
+      if (tiles.length === 0) {
         return;
       }
 
-      fillBoard(fillIndex);
-      score.update(fillIndex.length); // change current block
+      fillBoard(tiles);
+      score.update(tiles.length); // change current block
 
       var selectedBlock = selectRandomBlock.apply(void 0, [block.getType()].concat(_toConsumableArray(blocks)));
       fillBlockTo($movingBlock, selectedBlock);
       blocks[blockIndex] = selectedBlock;
-      var rowComplete = checkRowComplete(fillIndex);
-      var colComplete = checkColComplete(fillIndex);
-      var areaComplete = checkAreaComplete(fillIndex);
+      var rowComplete = checkRowComplete(tiles);
+      var colComplete = checkColComplete(tiles);
+      var areaComplete = checkAreaComplete(tiles);
       setTimeout(function () {
         // remove
         clearRow(rowComplete);
@@ -21253,12 +21261,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
 
         var fillables = [];
-        fillables.push.apply(fillables, _toConsumableArray(detectCollision(row, col, block.getShape())));
+        fillables.push.apply(fillables, _toConsumableArray(findFillableTiles(row, col, block.getShape())));
         var shape = block.getShape();
 
         for (var _i2 = 0; _i2 < 3; _i2++) {
           shape = _blockTransformUtil["default"].rotate(shape);
-          fillables.push.apply(fillables, _toConsumableArray(detectCollision(row, col, shape)));
+          fillables.push.apply(fillables, _toConsumableArray(findFillableTiles(row, col, shape)));
         }
 
         return fillables.length !== 0;
@@ -21278,7 +21286,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return result;
   }
 
-  function checkRowComplete(fillIndex) {
+  function checkRowComplete(tiles) {
     var result = [];
     var processed = [];
     var _iteratorNormalCompletion = true;
@@ -21286,9 +21294,9 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var _iteratorError = undefined;
 
     try {
-      for (var _iterator = fillIndex[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var index = _step.value;
-        var row = Math.floor(index / boardCol);
+      for (var _iterator = tiles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var tile = _step.value;
+        var row = Math.floor(tile.index / boardCol);
 
         if (processed.indexOf(row) > -1) {
           continue;
@@ -21330,7 +21338,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return result;
   }
 
-  function checkColComplete(fillIndex) {
+  function checkColComplete(tiles) {
     var result = [];
     var processed = [];
     var _iteratorNormalCompletion2 = true;
@@ -21338,9 +21346,9 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var _iteratorError2 = undefined;
 
     try {
-      for (var _iterator2 = fillIndex[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var index = _step2.value;
-        var col = Math.floor(index % boardCol);
+      for (var _iterator2 = tiles[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var tile = _step2.value;
+        var col = Math.floor(tile.index % boardCol);
 
         if (processed.indexOf(col) > -1) {
           continue;
@@ -21382,7 +21390,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return result;
   }
 
-  function checkAreaComplete(fillIndex) {
+  function checkAreaComplete(tiles) {
     var result = [];
     var processed = [];
 
@@ -21394,7 +21402,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       }));
     };
 
-    (0, _fromArray.fromArray)(fillIndex).pipe((0, _operators.map)(function (index) {
+    (0, _fromArray.fromArray)(tiles).pipe((0, _operators.map)(function (tile) {
+      var index = tile.index;
       var row = Math.floor(index / boardCol);
       var col = Math.floor(index % boardCol);
       return [row, col];
@@ -21438,16 +21447,28 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return result;
   }
 
-  function fillBoard(fillIndex) {
+  console.log(colors$);
+
+  function fillBoard(tiles) {
     var _iteratorNormalCompletion3 = true;
     var _didIteratorError3 = false;
     var _iteratorError3 = undefined;
 
     try {
-      for (var _iterator3 = fillIndex[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var index = _step3.value;
-        board[index] = 1;
-        (0, _jquery["default"])(".board-tile[data-index=\"".concat(index, "\"]")).addClass("fill");
+      var _loop = function _loop() {
+        var tile = _step3.value;
+        var index = tile.index;
+        board[index] = tile.color;
+        var $tile = (0, _jquery["default"])(".board-tile[data-index=\"".concat(index, "\"]"));
+        colors$.subscribe(function (colorClass) {
+          return $tile.removeClass(colorClass);
+        });
+        $tile.addClass("fill");
+        $tile.addClass("c".concat(tile.color));
+      };
+
+      for (var _iterator3 = tiles[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        _loop();
       }
     } catch (err) {
       _didIteratorError3 = true;
@@ -21471,7 +21492,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     $block.get(0).style.left = null;
   }
 
-  function detectCollision(baseRow, baseCol, shape) {
+  function findFillableTiles(baseRow, baseCol, shape) {
     var fillIndexes = [];
     var boardIndex = baseRow * boardRow + baseCol;
 
@@ -21487,10 +21508,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       var blockTile = shape[i];
       var boardTile = board[boardIndex];
 
-      if (blockTile === 1 && boardTile === 1) {
+      if (blockTile > 0 && boardTile > 0) {
         return [];
-      } else if (blockTile === 1) {
-        fillIndexes.push(boardIndex);
+      } else if (blockTile > 0) {
+        fillIndexes.push({
+          index: boardIndex,
+          color: blockTile
+        });
       }
 
       boardIndex++;
@@ -21544,22 +21568,31 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       return selectRandomBlock.apply(void 0, [current].concat(_toConsumableArray(except)));
     }
 
-    return new _transformableBlock["default"](selected, shapes[selected]);
+    var color = colors[Math.floor(Math.random() * colors.length)];
+    return new _transformableBlock["default"](selected, shapes[selected], color);
   }
 
   function fillBlockTo($el, block) {
     var tiles = $el.children(".block-tile");
     var shape = block.getShape();
 
-    for (var i = 0; i < shape.length; i++) {
+    var _loop2 = function _loop2(i) {
       var $tile = (0, _jquery["default"])(tiles.get(i));
       var tileValue = shape[i];
 
-      if (tileValue === 1) {
+      if (tileValue > 0) {
+        colors$.subscribe(function (colorClass) {
+          return $tile.removeClass(colorClass);
+        });
         $tile.addClass("fill");
+        $tile.addClass("c".concat(tileValue));
       } else {
         $tile.removeClass("fill");
       }
+    };
+
+    for (var i = 0; i < shape.length; i++) {
+      _loop2(i);
     }
   }
 });
@@ -21574,6 +21607,12 @@ exports["default"] = void 0;
 
 var _blockTransformUtil = _interopRequireDefault(require("./block-transform-util"));
 
+var _rxjs = require("rxjs");
+
+var _operators = require("rxjs/operators");
+
+var _fromArray = require("rxjs/internal/observable/fromArray");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -21585,11 +21624,18 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var TransformableBlock =
 /*#__PURE__*/
 function () {
-  function TransformableBlock(type, shape) {
+  function TransformableBlock(type, shape, color) {
+    var _this = this;
+
     _classCallCheck(this, TransformableBlock);
 
     this.type = type;
-    this.shape = shape;
+    this.shape = [];
+    (0, _fromArray.fromArray)(shape).pipe((0, _operators.map)(function (value) {
+      return value > 0 ? color : 0;
+    })).subscribe(function (value) {
+      return _this.shape.push(value);
+    });
   }
 
   _createClass(TransformableBlock, [{
@@ -21606,6 +21652,7 @@ function () {
     key: "rotate",
     value: function rotate() {
       this.shape = _blockTransformUtil["default"].rotate(this.shape);
+      return this;
     }
   }]);
 
@@ -21614,4 +21661,4 @@ function () {
 
 exports["default"] = TransformableBlock;
 
-},{"./block-transform-util":201}]},{},[204]);
+},{"./block-transform-util":201,"rxjs":2,"rxjs/internal/observable/fromArray":27,"rxjs/operators":200}]},{},[204]);

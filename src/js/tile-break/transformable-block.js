@@ -1,9 +1,16 @@
-import blockUtil from './block-transform-util'
+import blockUtil from "./block-transform-util";
+import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { fromArray } from "rxjs/internal/observable/fromArray";
 
 export default class TransformableBlock {
-  constructor(type, shape) {
+  constructor(type, shape, color) {
     this.type = type;
-    this.shape = shape;
+    this.shape = [];
+
+    fromArray(shape)
+      .pipe(map(value => (value > 0 ? color : 0)))
+      .subscribe(value => this.shape.push(value));
   }
 
   getType() {
@@ -16,6 +23,6 @@ export default class TransformableBlock {
 
   rotate() {
     this.shape = blockUtil.rotate(this.shape);
+    return this;
   }
 }
-
