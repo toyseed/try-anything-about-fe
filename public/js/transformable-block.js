@@ -6,6 +6,63 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
+function reverse(block) {
+  var after = [];
+
+  for (var i = 0; i < block.length; i++) {
+    after[i] = block[i] === 0 ? 1 : 0;
+  }
+
+  return after;
+}
+
+function rotate(block) {
+  var after = [];
+  var toBase = 6;
+
+  for (var r = 0; r < 3; r++) {
+    for (var c = 0; c < 3; c++) {
+      var to = toBase - c * 3;
+      after[to] = block[r * 3 + c];
+    }
+
+    toBase++;
+  }
+
+  return after;
+}
+
+function flip(block) {
+  var after = [];
+
+  for (var r = 0; r < 3; r++) {
+    for (var c = 0; c < 3; c++) {
+      after[r * 3 + c] = block[r * 3 + 2 - c];
+    }
+  }
+
+  return after;
+}
+
+var _default = {
+  reverse: reverse,
+  rotate: rotate,
+  flip: flip
+};
+exports["default"] = _default;
+
+},{}],2:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _blockTransformUtil = _interopRequireDefault(require("./block-transform-util"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -15,59 +72,27 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var TransformableBlock =
 /*#__PURE__*/
 function () {
-  function TransformableBlock(block) {
+  function TransformableBlock(type, shape) {
     _classCallCheck(this, TransformableBlock);
 
-    if (block.length != 9) {
-      throw 'invalid param';
-    }
-
-    this.block = block;
+    this.type = type;
+    this.shape = shape;
   }
 
   _createClass(TransformableBlock, [{
-    key: "get",
-    value: function get() {
-      return this.block;
+    key: "getType",
+    value: function getType() {
+      return this.type;
     }
   }, {
-    key: "reverse",
-    value: function reverse() {
-      var after = [];
-
-      for (var i = 0; i < this.block.length; i++) {
-        after[i] = this.block[i] === 0 ? 1 : 0;
-      }
-
-      return new TransformableBlock(after);
+    key: "getShape",
+    value: function getShape() {
+      return this.shape;
     }
   }, {
     key: "rotate",
     value: function rotate() {
-      var after = [];
-      var toBase = 6;
-
-      for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
-          var to = toBase - c * 3;
-          after[to] = this.block[r * 3 + c];
-        }
-
-        toBase++;
-      }
-
-      return new TransformableBlock(after);
-    }
-  }, {
-    key: "flip",
-    value: function flip() {
-      var after = [];
-
-      for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {}
-      }
-
-      return this;
+      this.shape = _blockTransformUtil["default"].rotate(this.shape);
     }
   }]);
 
@@ -76,10 +101,4 @@ function () {
 
 exports["default"] = TransformableBlock;
 
-(function () {
-  var block = new TransformableBlock([1, 0, 0, 1, 1, 0, 1, 0, 0]);
-  console.log(block.get());
-  console.log(block.rotate().get());
-})();
-
-},{}]},{},[1]);
+},{"./block-transform-util":1}]},{},[2]);

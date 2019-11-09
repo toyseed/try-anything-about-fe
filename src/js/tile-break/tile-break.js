@@ -13,8 +13,11 @@ import {
   takeUntil,
   tap
 } from "rxjs/operators";
-import { all as ALL_BLOCKS } from './blocks';
 import { fromArray } from 'rxjs/internal/observable/fromArray';
+import { shapes as ALL_SHAPES } from './blocks';
+import Score from './score';
+import Block from './transformable-block';
+import util from './block-transform-util';
 
 /*
   1. block 에 색상 추가
@@ -26,6 +29,8 @@ import { fromArray } from 'rxjs/internal/observable/fromArray';
   5. / support touch event
   6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
   7. block 회전 기능 추가
+    - 회전을 위한 버튼
+
  */
 $(window).ready(() => {
   const boardRow = 9;
@@ -33,38 +38,14 @@ $(window).ready(() => {
   const blockRow = 3;
   const blockCol = 3;
 
-  const blocks = ALL_BLOCKS;
-  console.log(blocks);
-  const blockTypesTotal = blocks.length;
-  const showingBlockEls = $(".block");
-  let showingBlockTypes = [];
+  const shapes = ALL_SHAPES;
+  console.log(shapes);
+  const blockEls = $(".block");
+  let blocks = [];
   let board;
-  let score = (() => {
-    const $score = $(".score-current");
-    let score = 0;
 
-    function update(num) {
-      score += num;
-      $score.text(score);
-    }
-
-    function reset() {
-      score = 0;
-      $score.text(score);
-    }
-
-    function get() {
-      return score;
-    }
-
-    return {
-      update,
-      reset,
-      get
-    };
-  })();
-
-  let gameoverLayer = (score => {
+  let score = new Score(".score-current");
+  let gameOverLayer = (score => {
     let $layer = $(".gameover");
     let $score = $($layer.find(".last-score"));
 
@@ -84,9 +65,18 @@ $(window).ready(() => {
     };
   })(score);
 
-  initGame();
-  // replay 2 번 누르면 stackoverflow 일어남.
   fromEvent($('.replay-button'), 'click').subscribe(() => initGame());
+  fromEvent($('.rotate-btn'), 'click').pipe(map(event => {
+    const $button = $(event.target);
+    const blockIndex = $button.data('index');
+
+    return blockIndex;
+  })).subscribe(blockIndex => {
+    const block = blocks[blockIndex];
+    block.rotate();
+    fillBlockTo($(`.block[data-block-index=${blockIndex}]`), block);
+  })
+  initGame();
 
   function initGame() {
     board = Array.apply(null, Array(boardRow * boardCol)).map(() => 0);
@@ -103,13 +93,13 @@ $(window).ready(() => {
   }
 
   function initBlocks() {
-    showingBlockTypes = [];
-    showingBlockEls.each(function() {
-      const block = selectRandomBlock(-1, ...showingBlockTypes);
-      showingBlockTypes.push(block.blockType);
+    blocks = [];
+    blockEls.each(function() {
+      const block = selectRandomBlock(-1, ...blocks);
+      blocks.push(block);
 
       const $el = $(this);
-      fillBlockTo($el, block.blockType, block.block);
+      fillBlockTo($el, block);
     });
   }
 
@@ -138,7 +128,7 @@ $(window).ready(() => {
     const $blocks = $(".blocks");
     let blockY;
     let blockX;
-    let $current;
+    let $movingBlock;
     let pointAdjustment;
 
     // mousemove event 가 없으면 오류 발생.
@@ -149,20 +139,20 @@ $(window).ready(() => {
       .pipe(
         tap(event => {
           event.preventDefault();
-          $current = $(event.target);
-          $current.addClass("current");
+          $movingBlock = $(event.target);
+          $movingBlock.addClass("current");
 
-          let blockOffset = $current.offset();
+          let blockOffset = $movingBlock.offset();
           blockY = blockOffset.top - window.scrollY;
           blockX = blockOffset.left - window.scrollX;
 
-          pointAdjustment = $current.width() / (blockCol * 2);
+          pointAdjustment = $movingBlock.width() / (blockCol * 2);
         }),
         mergeMap(startEvent => {
           return move$.pipe(
             takeUntil(end$),
             tap(moveEvent => {
-              $current.css({
+              $movingBlock.css({
                 top: moveEvent.clientY - blockY - startEvent.offsetY + 1,
                 left: moveEvent.clientX - blockX - startEvent.offsetX + 1
               });
@@ -170,7 +160,7 @@ $(window).ready(() => {
             last(),
             map(moveEvent => {
               return {
-                blockType: $current.data("blockType"),
+                blockIndex: $movingBlock.data("block-index"),
                 x: moveEvent.clientX - startEvent.offsetX + pointAdjustment,
                 y: moveEvent.clientY - startEvent.offsetY + pointAdjustment
               };
@@ -179,18 +169,18 @@ $(window).ready(() => {
         })
       )
       .subscribe(
-        ({ x, y, blockType }) => {
-          console.log("x: ", x, "y: ", y);
-          resetBlock($current);
+        ({ x, y, blockIndex }) => {
+          resetBlock($movingBlock);
 
           const $checkBase = $(document.elementFromPoint(x, y));
           if (!$checkBase.hasClass("js_board-tile")) {
             return;
           }
 
+          const block = blocks[blockIndex];
           const baseRow = $checkBase.data("row");
           const baseCol = $checkBase.data("col");
-          const fillIndex = detectCollision(baseRow, baseCol, blockType);
+          const fillIndex = detectCollision(baseRow, baseCol, block.getShape());
           if (fillIndex.length === 0) {
             return;
           }
@@ -199,11 +189,9 @@ $(window).ready(() => {
           score.update(fillIndex.length);
 
           // change current block
-          const selected = selectRandomBlock(blockType, ...showingBlockTypes);
-          fillBlockTo($current, selected.blockType, selected.block);
-
-          const blockIndex = $current.data("block-index");
-          showingBlockTypes[blockIndex] = selected.blockType;
+          const selectedBlock = selectRandomBlock(block.getType(), ...blocks);
+          fillBlockTo($movingBlock, selectedBlock);
+          blocks[blockIndex] = selectedBlock;
 
           const rowComplete = checkRowComplete(fillIndex);
           const colComplete = checkColComplete(fillIndex);
@@ -218,13 +206,13 @@ $(window).ready(() => {
             // 게임 종료 조건 확인
             if (checkGameOver()) {
               game$.unsubscribe();
-              gameoverLayer.show();
+              gameOverLayer.show();
             }
           }, 100);
         },
         error => {
           console.log(error);
-          resetBlock($current);
+          resetBlock($movingBlock);
           initEvents();
         },
         complete => {
@@ -294,8 +282,8 @@ $(window).ready(() => {
         map(value => [i++, value]),
         // filter(([index, value]) => value === 0),
         mergeMap(([index, value]) => {
-          return fromArray(showingBlockTypes).pipe(
-            map(blockType => {
+          return fromArray(blocks).pipe(
+            map(block => {
               const row = Math.floor(index / boardCol);
               const col = Math.floor(index % boardCol);
 
@@ -303,7 +291,16 @@ $(window).ready(() => {
                 return false;
               }
 
-              const fillables = detectCollision(row, col, blockType);
+              const fillables = [];
+
+              fillables.push(...detectCollision(row, col, block.getShape()));
+              let shape = block.getShape();
+
+              for (let i = 0; i < 3; i++) {
+                shape = util.rotate(shape);
+                fillables.push(...detectCollision(row, col, shape));
+              }
+
               return fillables.length !== 0;
             })
           );
@@ -446,12 +443,10 @@ $(window).ready(() => {
     $block.get(0).style.left = null;
   }
 
-  // TODO: block 이 board 안에 완전히 들어오지 않더라도 tile 이 board 에 반영될 수 있는 스펙을 고려해보자.
-  function detectCollision(baseRow, baseCol, blockType) {
-    const block = blocks[blockType];
+  function detectCollision(baseRow, baseCol, shape) {
     const fillIndexes = [];
     let boardIndex = baseRow * boardRow + baseCol;
-    for (let i = 0; i < block.length; i++) {
+    for (let i = 0; i < shape.length; i++) {
       if (i !== 0 && i % 3 === 0) {
         boardIndex += boardCol - 3;
       }
@@ -460,7 +455,7 @@ $(window).ready(() => {
         return [];
       }
 
-      let blockTile = block[i];
+      let blockTile = shape[i];
       let boardTile = board[boardIndex];
 
       if (blockTile === 1 && boardTile === 1) {
@@ -475,25 +470,34 @@ $(window).ready(() => {
     return fillIndexes;
   }
 
+  function hasBlock(blocks, blockType) {
+    for (let block of blocks) {
+      if (block.getType() === blockType) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function selectRandomBlock(current = -1, ...except) {
     except = except || [];
 
-    let selected = Math.floor(Math.random() * blockTypesTotal);
-    if (current === selected || except.indexOf(selected) > -1) {
+    let selected = Math.floor(Math.random() * shapes.length);
+    if (current === selected || hasBlock(except, selected)) {
       return selectRandomBlock(current, ...except);
     }
 
-    return {
-      blockType: selected,
-      block: blocks[selected]
-    };
+    return new Block(selected, shapes[selected]);
   }
 
-  function fillBlockTo($el, blockType, block) {
+  function fillBlockTo($el, block) {
     const tiles = $el.children(".block-tile");
-    for (let i = 0; i < block.length; i++) {
+    const shape = block.getShape();
+
+    for (let i = 0; i < shape.length; i++) {
       let $tile = $(tiles.get(i));
-      let tileValue = block[i];
+      let tileValue = shape[i];
 
       if (tileValue === 1) {
         $tile.addClass("fill");
@@ -501,6 +505,5 @@ $(window).ready(() => {
         $tile.removeClass("fill");
       }
     }
-    $el.data("blockType", blockType);
   }
 });

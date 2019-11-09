@@ -20853,52 +20853,125 @@ exports.zipAll = zipAll_1.zipAll;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.all = void 0;
+exports["default"] = void 0;
 
-var _transformableBlock = _interopRequireDefault(require("./transformable-block"));
+function reverse(block) {
+  var after = [];
+
+  for (var i = 0; i < block.length; i++) {
+    after[i] = block[i] === 0 ? 1 : 0;
+  }
+
+  return after;
+}
+
+function rotate(block) {
+  var after = [];
+  var toBase = 6;
+
+  for (var r = 0; r < 3; r++) {
+    for (var c = 0; c < 3; c++) {
+      var to = toBase - c * 3;
+      after[to] = block[r * 3 + c];
+    }
+
+    toBase++;
+  }
+
+  return after;
+}
+
+function flip(block) {
+  var after = [];
+
+  for (var r = 0; r < 3; r++) {
+    for (var c = 0; c < 3; c++) {
+      after[r * 3 + c] = block[r * 3 + 2 - c];
+    }
+  }
+
+  return after;
+}
+
+var _default = {
+  reverse: reverse,
+  rotate: rotate,
+  flip: flip
+};
+exports["default"] = _default;
+
+},{}],202:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.shapes = void 0;
+var a1 = [1, 0, 1, 0, 0, 0, 1, 0, 1];
+var b1 = [1, 0, 0, 1, 0, 0, 1, 1, 1];
+var c1 = [0, 0, 0, 0, 1, 1, 1, 1, 0];
+var d1 = [1, 0, 0, 1, 1, 0, 1, 0, 0];
+var f1 = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+var g1 = [1, 0, 0, 1, 0, 0, 1, 0, 0];
+var h1 = [0, 0, 0, 0, 1, 0, 0, 0, 0];
+var i1 = [0, 0, 1, 0, 0, 0, 1, 0, 0];
+var j1 = [0, 0, 0, 1, 0, 1, 0, 0, 0];
+var shapes = [a1, b1, c1, d1, f1, g1, h1, i1, j1];
+exports.shapes = shapes;
+
+},{}],203:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _jquery = _interopRequireDefault(require("jquery"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var a1 = new _transformableBlock["default"]([1, 0, 1, 0, 0, 0, 1, 0, 1]);
-var a2 = a1.reverse();
-var b1 = new _transformableBlock["default"]([1, 0, 0, 1, 0, 0, 1, 1, 1]);
-var b2 = b1.rotate();
-var b3 = b2.rotate();
-var b4 = b3.rotate();
-var c1 = new _transformableBlock["default"]([0, 0, 0, 0, 1, 1, 1, 1, 0]);
-var c2 = c1.rotate();
-var c3 = c1.flip();
-var c4 = c3.rotate();
-var d1 = new _transformableBlock["default"]([1, 0, 0, 1, 1, 0, 1, 0, 0]);
-var d2 = d1.rotate();
-var d3 = d2.rotate();
-var d4 = d3.rotate();
-var e1 = d1.reverse();
-var e2 = e1.rotate();
-var e3 = e2.rotate();
-var e4 = e3.rotate();
-var f1 = new _transformableBlock["default"]([0, 1, 0, 0, 1, 0, 0, 1, 0]);
-var f2 = f1.rotate();
-var g1 = new _transformableBlock["default"]([1, 0, 0, 1, 0, 0, 1, 0, 0]);
-var g2 = g1.rotate();
-var g3 = g2.rotate();
-var g4 = g3.rotate();
-var h1 = new _transformableBlock["default"]([0, 0, 0, 0, 1, 0, 0, 0, 0]);
-var i1 = new _transformableBlock["default"]([0, 0, 1, 0, 0, 0, 1, 0, 0]);
-var i2 = i1.flip();
-var j1 = new _transformableBlock["default"]([0, 0, 0, 1, 0, 1, 0, 0, 0]);
-var j2 = j1.rotate();
-var blocks = [a1, a2, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, e1, e2, e3, e4, f1, f2, g1, g2, g3, g4, h1, i1, i2, j1, j2];
-var all = [];
-exports.all = all;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-for (var _i = 0, _blocks = blocks; _i < _blocks.length; _i++) {
-  var block = _blocks[_i];
-  console.log(block);
-  all.push(block.get());
-}
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-},{"./transformable-block":203}],202:[function(require,module,exports){
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Score =
+/*#__PURE__*/
+function () {
+  function Score(selector) {
+    _classCallCheck(this, Score);
+
+    this.$score = (0, _jquery["default"])(selector);
+    this.score = 0;
+  }
+
+  _createClass(Score, [{
+    key: "update",
+    value: function update(num) {
+      this.score += num;
+      this.$score.text(this.score);
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.score = 0;
+      this.$score.text(this.score);
+    }
+  }, {
+    key: "get",
+    value: function get() {
+      return this.score;
+    }
+  }]);
+
+  return Score;
+}();
+
+exports["default"] = Score;
+
+},{"jquery":1}],204:[function(require,module,exports){
 "use strict";
 
 var _jquery = _interopRequireDefault(require("jquery"));
@@ -20907,9 +20980,15 @@ var _rxjs = require("rxjs");
 
 var _operators = require("rxjs/operators");
 
+var _fromArray = require("rxjs/internal/observable/fromArray");
+
 var _blocks = require("./blocks");
 
-var _fromArray = require("rxjs/internal/observable/fromArray");
+var _score = _interopRequireDefault(require("./score"));
+
+var _transformableBlock = _interopRequireDefault(require("./transformable-block"));
+
+var _blockTransformUtil = _interopRequireDefault(require("./block-transform-util"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -20935,48 +21014,26 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     -> block 에 shadow 줬음.
   3. ? block 이 board 에 입력되는 방식 변경
     - block 에서 fill 영역만 board 에 포함되어도 board 가 fill 될 수 있게
-  4. block design
+  4. / block design
   5. / support touch event
   6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
+  7. block 회전 기능 추가
+    - 회전을 위한 버튼
+
  */
 (0, _jquery["default"])(window).ready(function () {
   var boardRow = 9;
   var boardCol = 9;
   var blockRow = 3;
   var blockCol = 3;
-  var blocks = _blocks.all;
-  console.log(blocks);
-  var blockTypesTotal = blocks.length;
-  var showingBlockEls = (0, _jquery["default"])(".block");
-  var showingBlockTypes = [];
+  var shapes = _blocks.shapes;
+  console.log(shapes);
+  var blockEls = (0, _jquery["default"])(".block");
+  var blocks = [];
   var board;
+  var score = new _score["default"](".score-current");
 
-  var score = function () {
-    var $score = (0, _jquery["default"])(".score-current");
-    var score = 0;
-
-    function update(num) {
-      score += num;
-      $score.text(score);
-    }
-
-    function reset() {
-      score = 0;
-      $score.text(score);
-    }
-
-    function get() {
-      return score;
-    }
-
-    return {
-      update: update,
-      reset: reset,
-      get: get
-    };
-  }();
-
-  var gameoverLayer = function (score) {
+  var gameOverLayer = function (score) {
     var $layer = (0, _jquery["default"])(".gameover");
     var $score = (0, _jquery["default"])($layer.find(".last-score"));
     $layer.on("click", hide);
@@ -20996,11 +21053,19 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     };
   }(score);
 
-  initGame(); // replay 2 번 누르면 stackoverflow 일어남.
-
   (0, _rxjs.fromEvent)((0, _jquery["default"])('.replay-button'), 'click').subscribe(function () {
     return initGame();
   });
+  (0, _rxjs.fromEvent)((0, _jquery["default"])('.rotate-btn'), 'click').pipe((0, _operators.map)(function (event) {
+    var $button = (0, _jquery["default"])(event.target);
+    var blockIndex = $button.data('index');
+    return blockIndex;
+  })).subscribe(function (blockIndex) {
+    var block = blocks[blockIndex];
+    block.rotate();
+    fillBlockTo((0, _jquery["default"])(".block[data-block-index=".concat(blockIndex, "]")), block);
+  });
+  initGame();
 
   function initGame() {
     board = Array.apply(null, Array(boardRow * boardCol)).map(function () {
@@ -21019,12 +21084,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   }
 
   function initBlocks() {
-    showingBlockTypes = [];
-    showingBlockEls.each(function () {
-      var block = selectRandomBlock.apply(void 0, [-1].concat(_toConsumableArray(showingBlockTypes)));
-      showingBlockTypes.push(block.blockType);
+    blocks = [];
+    blockEls.each(function () {
+      var block = selectRandomBlock.apply(void 0, [-1].concat(_toConsumableArray(blocks)));
+      blocks.push(block);
       var $el = (0, _jquery["default"])(this);
-      fillBlockTo($el, block.blockType, block.block);
+      fillBlockTo($el, block);
     });
   }
 
@@ -21049,7 +21114,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var $blocks = (0, _jquery["default"])(".blocks");
     var blockY;
     var blockX;
-    var $current;
+    var $movingBlock;
     var pointAdjustment; // mousemove event 가 없으면 오류 발생.
     // https://codepen.io/joshblack/pen/zGZZjX
     //  no selectMany;
@@ -21057,21 +21122,21 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var game$ = start$.pipe((0, _operators.tap)(function (event) {
       event.preventDefault();
-      $current = (0, _jquery["default"])(event.target);
-      $current.addClass("current");
-      var blockOffset = $current.offset();
+      $movingBlock = (0, _jquery["default"])(event.target);
+      $movingBlock.addClass("current");
+      var blockOffset = $movingBlock.offset();
       blockY = blockOffset.top - window.scrollY;
       blockX = blockOffset.left - window.scrollX;
-      pointAdjustment = $current.width() / (blockCol * 2);
+      pointAdjustment = $movingBlock.width() / (blockCol * 2);
     }), (0, _operators.mergeMap)(function (startEvent) {
       return move$.pipe((0, _operators.takeUntil)(end$), (0, _operators.tap)(function (moveEvent) {
-        $current.css({
+        $movingBlock.css({
           top: moveEvent.clientY - blockY - startEvent.offsetY + 1,
           left: moveEvent.clientX - blockX - startEvent.offsetX + 1
         });
       }), (0, _operators.last)(), (0, _operators.map)(function (moveEvent) {
         return {
-          blockType: $current.data("blockType"),
+          blockIndex: $movingBlock.data("block-index"),
           x: moveEvent.clientX - startEvent.offsetX + pointAdjustment,
           y: moveEvent.clientY - startEvent.offsetY + pointAdjustment
         };
@@ -21079,18 +21144,18 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     })).subscribe(function (_ref) {
       var x = _ref.x,
           y = _ref.y,
-          blockType = _ref.blockType;
-      console.log("x: ", x, "y: ", y);
-      resetBlock($current);
+          blockIndex = _ref.blockIndex;
+      resetBlock($movingBlock);
       var $checkBase = (0, _jquery["default"])(document.elementFromPoint(x, y));
 
       if (!$checkBase.hasClass("js_board-tile")) {
         return;
       }
 
+      var block = blocks[blockIndex];
       var baseRow = $checkBase.data("row");
       var baseCol = $checkBase.data("col");
-      var fillIndex = detectCollision(baseRow, baseCol, blockType);
+      var fillIndex = detectCollision(baseRow, baseCol, block.getShape());
 
       if (fillIndex.length === 0) {
         return;
@@ -21099,10 +21164,9 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       fillBoard(fillIndex);
       score.update(fillIndex.length); // change current block
 
-      var selected = selectRandomBlock.apply(void 0, [blockType].concat(_toConsumableArray(showingBlockTypes)));
-      fillBlockTo($current, selected.blockType, selected.block);
-      var blockIndex = $current.data("block-index");
-      showingBlockTypes[blockIndex] = selected.blockType;
+      var selectedBlock = selectRandomBlock.apply(void 0, [block.getType()].concat(_toConsumableArray(blocks)));
+      fillBlockTo($movingBlock, selectedBlock);
+      blocks[blockIndex] = selectedBlock;
       var rowComplete = checkRowComplete(fillIndex);
       var colComplete = checkColComplete(fillIndex);
       var areaComplete = checkAreaComplete(fillIndex);
@@ -21114,12 +21178,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
         if (checkGameOver()) {
           game$.unsubscribe();
-          gameoverLayer.show();
+          gameOverLayer.show();
         }
       }, 100);
     }, function (error) {
       console.log(error);
-      resetBlock($current);
+      resetBlock($movingBlock);
       initEvents();
     }, function (complete) {
       console.log("complete");
@@ -21180,7 +21244,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           index = _ref3[0],
           value = _ref3[1];
 
-      return (0, _fromArray.fromArray)(showingBlockTypes).pipe((0, _operators.map)(function (blockType) {
+      return (0, _fromArray.fromArray)(blocks).pipe((0, _operators.map)(function (block) {
         var row = Math.floor(index / boardCol);
         var col = Math.floor(index % boardCol);
 
@@ -21188,7 +21252,15 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           return false;
         }
 
-        var fillables = detectCollision(row, col, blockType);
+        var fillables = [];
+        fillables.push.apply(fillables, _toConsumableArray(detectCollision(row, col, block.getShape())));
+        var shape = block.getShape();
+
+        for (var _i2 = 0; _i2 < 3; _i2++) {
+          shape = _blockTransformUtil["default"].rotate(shape);
+          fillables.push.apply(fillables, _toConsumableArray(detectCollision(row, col, shape)));
+        }
+
         return fillables.length !== 0;
       }));
     }), (0, _operators.filter)(function (value) {
@@ -21397,15 +21469,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     $block.removeClass("current");
     $block.get(0).style.top = null;
     $block.get(0).style.left = null;
-  } // TODO: block 이 board 안에 완전히 들어오지 않더라도 tile 이 board 에 반영될 수 있는 스펙을 고려해보자.
+  }
 
-
-  function detectCollision(baseRow, baseCol, blockType) {
-    var block = blocks[blockType];
+  function detectCollision(baseRow, baseCol, shape) {
     var fillIndexes = [];
     var boardIndex = baseRow * boardRow + baseCol;
 
-    for (var i = 0; i < block.length; i++) {
+    for (var i = 0; i < shape.length; i++) {
       if (i !== 0 && i % 3 === 0) {
         boardIndex += boardCol - 3;
       }
@@ -21414,7 +21484,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return [];
       }
 
-      var blockTile = block[i];
+      var blockTile = shape[i];
       var boardTile = board[boardIndex];
 
       if (blockTile === 1 && boardTile === 1) {
@@ -21429,6 +21499,37 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return fillIndexes;
   }
 
+  function hasBlock(blocks, blockType) {
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+      for (var _iterator4 = blocks[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+        var block = _step4.value;
+
+        if (block.getType() === blockType) {
+          return true;
+        }
+      }
+    } catch (err) {
+      _didIteratorError4 = true;
+      _iteratorError4 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
+          _iterator4["return"]();
+        }
+      } finally {
+        if (_didIteratorError4) {
+          throw _iteratorError4;
+        }
+      }
+    }
+
+    return false;
+  }
+
   function selectRandomBlock() {
     var current = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
 
@@ -21437,24 +21538,22 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }
 
     except = except || [];
-    var selected = Math.floor(Math.random() * blockTypesTotal);
+    var selected = Math.floor(Math.random() * shapes.length);
 
-    if (current === selected || except.indexOf(selected) > -1) {
+    if (current === selected || hasBlock(except, selected)) {
       return selectRandomBlock.apply(void 0, [current].concat(_toConsumableArray(except)));
     }
 
-    return {
-      blockType: selected,
-      block: blocks[selected]
-    };
+    return new _transformableBlock["default"](selected, shapes[selected]);
   }
 
-  function fillBlockTo($el, blockType, block) {
+  function fillBlockTo($el, block) {
     var tiles = $el.children(".block-tile");
+    var shape = block.getShape();
 
-    for (var i = 0; i < block.length; i++) {
+    for (var i = 0; i < shape.length; i++) {
       var $tile = (0, _jquery["default"])(tiles.get(i));
-      var tileValue = block[i];
+      var tileValue = shape[i];
 
       if (tileValue === 1) {
         $tile.addClass("fill");
@@ -21462,18 +21561,20 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         $tile.removeClass("fill");
       }
     }
-
-    $el.data("blockType", blockType);
   }
 });
 
-},{"./blocks":201,"jquery":1,"rxjs":2,"rxjs/internal/observable/fromArray":27,"rxjs/operators":200}],203:[function(require,module,exports){
+},{"./block-transform-util":201,"./blocks":202,"./score":203,"./transformable-block":205,"jquery":1,"rxjs":2,"rxjs/internal/observable/fromArray":27,"rxjs/operators":200}],205:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports["default"] = void 0;
+
+var _blockTransformUtil = _interopRequireDefault(require("./block-transform-util"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -21484,61 +21585,27 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var TransformableBlock =
 /*#__PURE__*/
 function () {
-  function TransformableBlock(block) {
+  function TransformableBlock(type, shape) {
     _classCallCheck(this, TransformableBlock);
 
-    if (block.length != 9) {
-      throw 'invalid param';
-    }
-
-    this.block = block;
+    this.type = type;
+    this.shape = shape;
   }
 
   _createClass(TransformableBlock, [{
-    key: "get",
-    value: function get() {
-      return this.block;
+    key: "getType",
+    value: function getType() {
+      return this.type;
     }
   }, {
-    key: "reverse",
-    value: function reverse() {
-      var after = [];
-
-      for (var i = 0; i < this.block.length; i++) {
-        after[i] = this.block[i] === 0 ? 1 : 0;
-      }
-
-      return new TransformableBlock(after);
+    key: "getShape",
+    value: function getShape() {
+      return this.shape;
     }
   }, {
     key: "rotate",
     value: function rotate() {
-      var after = [];
-      var toBase = 6;
-
-      for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
-          var to = toBase - c * 3;
-          after[to] = this.block[r * 3 + c];
-        }
-
-        toBase++;
-      }
-
-      return new TransformableBlock(after);
-    }
-  }, {
-    key: "flip",
-    value: function flip() {
-      var after = [];
-
-      for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
-          after[r * 3 + c] = this.block[r * 3 + 2 - c];
-        }
-      }
-
-      return new TransformableBlock(after);
+      this.shape = _blockTransformUtil["default"].rotate(this.shape);
     }
   }]);
 
@@ -21547,4 +21614,4 @@ function () {
 
 exports["default"] = TransformableBlock;
 
-},{}]},{},[202]);
+},{"./block-transform-util":201}]},{},[204]);

@@ -50,6 +50,11 @@
         }
         %>
     ></div>
+    <div class="rotate-btns">
+        <% for(let i = 0; i < showingBlockCount; i++) {%>
+        <button class="rotate-btn" data-index="<%=i%>">rotate</button>
+        <% }%>
+    </div>
     <div class="replay">
         <button class="replay-button">replay</button>
     </div>
