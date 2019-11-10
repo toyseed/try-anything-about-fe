@@ -12,26 +12,13 @@ import {
   switchMap,
   takeUntil,
   tap,
-  throttleTime
 } from "rxjs/operators";
 import { fromArray } from "rxjs/internal/observable/fromArray";
-import { shapes as ALL_SHAPES } from "./blocks";
+import { shapes as ALL_SHAPES } from "./shapes";
 import Score from "./score";
 import Block from "./transformable-block";
 import util from "./block-transform-util";
 
-/*
-  1. block 에 색상 추가
-  2. ? board 에 block 이 over 됐을 때 fill 될 tile 에 음영추가
-    -> block 에 shadow 줬음.
-  3. ? block 이 board 에 입력되는 방식 변경
-    - block 에서 fill 영역만 board 에 포함되어도 board 가 fill 될 수 있게
-  4. / block design
-  5. / support touch event
-  6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
-  7. / block 회전 기능 추가
-    - 회전을 위한 버튼
- */
 $(window).ready(() => {
   const boardRow = 9;
   const boardCol = 9;
@@ -129,10 +116,6 @@ $(window).ready(() => {
     const end$ = merge(mouseEnd$, touchEnd$);
     const move$ = merge(mouseMove$, touchMove$);
 
-    // const start$ = mouseStart$;
-    // const end$ = mouseEnd$;
-    // const move$ = mouseMove$;
-
     const $blocks = $(".blocks");
     let blockY;
     let blockX;
@@ -158,7 +141,6 @@ $(window).ready(() => {
         }),
         mergeMap(startEvent => {
           return move$.pipe(
-            // throttleTime(10),
             takeUntil(end$),
             tap(moveEvent => {
               // https://stackoverflow.com/questions/11334452/event-offsetx-in-firefox
@@ -224,12 +206,10 @@ $(window).ready(() => {
           }, 100);
         },
         error => {
-          console.log(error);
           resetBlock($movingBlock);
           initEvents();
         },
         complete => {
-          console.log("complete");
         }
       );
   }
@@ -241,7 +221,6 @@ $(window).ready(() => {
           return range(0, boardCol).pipe(map(i => row + i));
         }),
         tap(tileIndex => {
-          console.log("clearrow: ", tileIndex);
           board[tileIndex] = 0;
           $(`.board-tile[data-index=${tileIndex}]`).removeClass("fill");
         })
@@ -256,7 +235,6 @@ $(window).ready(() => {
           return range(0, boardRow).pipe(map(i => col + i * boardCol));
         }),
         tap(tileIndex => {
-          console.log("clearcol: ", tileIndex);
           board[tileIndex] = 0;
           $(`.board-tile[data-index=${tileIndex}]`).removeClass("fill");
         })
@@ -279,7 +257,6 @@ $(window).ready(() => {
           });
         }),
         tap(tileIndex => {
-          console.log("clear area: ", tileIndex);
           board[tileIndex] = 0;
           $(`.board-tile[data-index=${tileIndex}]`).removeClass("fill");
         })
@@ -328,10 +305,8 @@ $(window).ready(() => {
             result = false;
           }
         },
-        error => console.log("checkGameOver error: ", error),
-        () => console.log("checkGameover: complete")
+        error => {console.log("checkGameOver error: ", error)}
       );
-    console.log("is gameover? ", result);
     return result;
   }
 
@@ -356,7 +331,6 @@ $(window).ready(() => {
         }
       }
 
-      console.log("rowBase: ", rowBase, "result: ", complete);
       if (complete) {
         result.push(rowBase);
       }
@@ -386,7 +360,6 @@ $(window).ready(() => {
         }
       }
 
-      console.log("colBase: ", colBase, "result: ", complete);
       if (complete) {
         result.push(colBase);
       }
@@ -435,7 +408,6 @@ $(window).ready(() => {
           startIndex += boardCol - blockCol;
         }
 
-        console.log("areaBase: ", baseIndex, "result: ", complete);
         if (complete) {
           result.push(baseIndex);
         }
@@ -444,7 +416,6 @@ $(window).ready(() => {
     return result;
   }
 
-  console.log(colors$);
   function fillBoard(tiles) {
     for (let tile of tiles) {
       let index = tile.index;

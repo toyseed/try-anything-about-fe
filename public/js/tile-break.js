@@ -20906,25 +20906,6 @@ exports["default"] = _default;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.shapes = void 0;
-var a1 = [1, 0, 1, 0, 0, 0, 1, 0, 1];
-var b1 = [1, 0, 0, 1, 0, 0, 1, 1, 1];
-var c1 = [0, 0, 0, 0, 1, 1, 1, 1, 0];
-var d1 = [1, 0, 0, 1, 1, 0, 1, 0, 0];
-var f1 = [0, 1, 0, 0, 1, 0, 0, 1, 0];
-var g1 = [1, 0, 0, 1, 0, 0, 1, 0, 0];
-var h1 = [0, 0, 0, 0, 1, 0, 0, 0, 0];
-var i1 = [0, 0, 1, 0, 0, 0, 1, 0, 0];
-var j1 = [0, 0, 0, 1, 0, 1, 0, 0, 0];
-var shapes = [a1, b1, c1, d1, f1, g1, h1, i1, j1];
-exports.shapes = shapes;
-
-},{}],203:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 exports["default"] = void 0;
 
 var _jquery = _interopRequireDefault(require("jquery"));
@@ -20971,7 +20952,40 @@ function () {
 
 exports["default"] = Score;
 
-},{"jquery":1}],204:[function(require,module,exports){
+},{"jquery":1}],203:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.shapes = void 0;
+
+var _blockTransformUtil = _interopRequireDefault(require("./block-transform-util"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var a1 = [0, 0, 0, 0, 1, 0, 1, 1, 1];
+var b1 = [1, 0, 0, 1, 0, 0, 1, 0, 0];
+var c1 = [0, 0, 0, 0, 1, 1, 1, 1, 0];
+
+var d1 = _blockTransformUtil["default"].flip(c1);
+
+var f1 = [0, 0, 1, 0, 0, 1, 0, 1, 1];
+
+var g1 = _blockTransformUtil["default"].flip(f1);
+
+var h1 = [1, 1, 0, 1, 1, 0, 0, 0, 0];
+var i1 = [0, 0, 0, 1, 0, 0, 1, 1, 0];
+var j1 = [0, 1, 1, 0, 1, 0, 1, 1, 0];
+
+var k1 = _blockTransformUtil["default"].flip(j1);
+
+var l1 = [1, 0, 0, 0, 1, 0, 1, 0, 0];
+var m1 = [0, 1, 0, 1, 1, 1, 0, 1, 0];
+var shapes = [a1, b1, c1, d1, f1, g1, h1, i1, j1, k1, l1, m1];
+exports.shapes = shapes;
+
+},{"./block-transform-util":201}],204:[function(require,module,exports){
 "use strict";
 
 var _jquery = _interopRequireDefault(require("jquery"));
@@ -20982,7 +20996,7 @@ var _operators = require("rxjs/operators");
 
 var _fromArray = require("rxjs/internal/observable/fromArray");
 
-var _blocks = require("./blocks");
+var _shapes = require("./shapes");
 
 var _score = _interopRequireDefault(require("./score"));
 
@@ -21008,25 +21022,13 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
-/*
-  1. block 에 색상 추가
-  2. ? board 에 block 이 over 됐을 때 fill 될 tile 에 음영추가
-    -> block 에 shadow 줬음.
-  3. ? block 이 board 에 입력되는 방식 변경
-    - block 에서 fill 영역만 board 에 포함되어도 board 가 fill 될 수 있게
-  4. / block design
-  5. / support touch event
-  6. / 종료 조건 - 들어갈 수 있는 공간이 있는지 찾기
-  7. / block 회전 기능 추가
-    - 회전을 위한 버튼
- */
 (0, _jquery["default"])(window).ready(function () {
   var boardRow = 9;
   var boardCol = 9;
   var blockRow = 3;
   var blockCol = 3;
   var blockEls = (0, _jquery["default"])(".block");
-  var shapes = _blocks.shapes;
+  var shapes = _shapes.shapes;
   var colors = [1, 2, 3, 4];
   var colors$ = (0, _fromArray.fromArray)(colors).pipe((0, _operators.map)(function (color) {
     return "c" + color;
@@ -21111,10 +21113,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     }));
     var start$ = (0, _rxjs.merge)(mouseStart$, touchStart$);
     var end$ = (0, _rxjs.merge)(mouseEnd$, touchEnd$);
-    var move$ = (0, _rxjs.merge)(mouseMove$, touchMove$); // const start$ = mouseStart$;
-    // const end$ = mouseEnd$;
-    // const move$ = mouseMove$;
-
+    var move$ = (0, _rxjs.merge)(mouseMove$, touchMove$);
     var $blocks = (0, _jquery["default"])(".blocks");
     var blockY;
     var blockX;
@@ -21133,8 +21132,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       blockX = blockOffset.left - window.scrollX;
       pointAdjustment = $movingBlock.width() / (blockCol * 2);
     }), (0, _operators.mergeMap)(function (startEvent) {
-      return move$.pipe( // throttleTime(10),
-      (0, _operators.takeUntil)(end$), (0, _operators.tap)(function (moveEvent) {
+      return move$.pipe((0, _operators.takeUntil)(end$), (0, _operators.tap)(function (moveEvent) {
         // https://stackoverflow.com/questions/11334452/event-offsetx-in-firefox
         var startOffsetX = startEvent.offsetX;
         var startOffsetY = startEvent.offsetY;
@@ -21190,12 +21188,9 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
       }, 100);
     }, function (error) {
-      console.log(error);
       resetBlock($movingBlock);
       initEvents();
-    }, function (complete) {
-      console.log("complete");
-    });
+    }, function (complete) {});
   }
 
   function clearRow(rows) {
@@ -21204,7 +21199,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return row + i;
       }));
     }), (0, _operators.tap)(function (tileIndex) {
-      console.log("clearrow: ", tileIndex);
       board[tileIndex] = 0;
       (0, _jquery["default"])(".board-tile[data-index=".concat(tileIndex, "]")).removeClass("fill");
     })).subscribe();
@@ -21216,7 +21210,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return col + i * boardCol;
       }));
     }), (0, _operators.tap)(function (tileIndex) {
-      console.log("clearcol: ", tileIndex);
       board[tileIndex] = 0;
       (0, _jquery["default"])(".board-tile[data-index=".concat(tileIndex, "]")).removeClass("fill");
     })).subscribe();
@@ -21235,7 +21228,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }
       });
     }), (0, _operators.tap)(function (tileIndex) {
-      console.log("clear area: ", tileIndex);
       board[tileIndex] = 0;
       (0, _jquery["default"])(".board-tile[data-index=".concat(tileIndex, "]")).removeClass("fill");
     })).subscribe();
@@ -21278,11 +21270,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         result = false;
       }
     }, function (error) {
-      return console.log("checkGameOver error: ", error);
-    }, function () {
-      return console.log("checkGameover: complete");
+      console.log("checkGameOver error: ", error);
     });
-    console.log("is gameover? ", result);
     return result;
   }
 
@@ -21313,8 +21302,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             break;
           }
         }
-
-        console.log("rowBase: ", rowBase, "result: ", complete);
 
         if (complete) {
           result.push(rowBase);
@@ -21365,8 +21352,6 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             break;
           }
         }
-
-        console.log("colBase: ", colBase, "result: ", complete);
 
         if (complete) {
           result.push(colBase);
@@ -21438,16 +21423,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         startIndex += boardCol - blockCol;
       }
 
-      console.log("areaBase: ", baseIndex, "result: ", complete);
-
       if (complete) {
         result.push(baseIndex);
       }
     });
     return result;
   }
-
-  console.log(colors$);
 
   function fillBoard(tiles) {
     var _iteratorNormalCompletion3 = true;
@@ -21597,7 +21578,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   }
 });
 
-},{"./block-transform-util":201,"./blocks":202,"./score":203,"./transformable-block":205,"jquery":1,"rxjs":2,"rxjs/internal/observable/fromArray":27,"rxjs/operators":200}],205:[function(require,module,exports){
+},{"./block-transform-util":201,"./score":202,"./shapes":203,"./transformable-block":205,"jquery":1,"rxjs":2,"rxjs/internal/observable/fromArray":27,"rxjs/operators":200}],205:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
