@@ -192,6 +192,7 @@ $(window).ready(() => {
           const colComplete = checkColComplete(tiles);
           const areaComplete = checkAreaComplete(tiles);
 
+          // block 이 board 에 잠시 노출될 수 사라지게 하기위해 timeout 을 적용했음.
           setTimeout(function() {
             // remove
             clearRow(rowComplete);
